@@ -1,7 +1,5 @@
-# Demo
+# How to use this rep
 
-blablabla!
+The notebook is the main document and you should start here.
 
-## Subheader
-
-lalalal
+The functions.py file is the same code as in the notebook but more compact.
