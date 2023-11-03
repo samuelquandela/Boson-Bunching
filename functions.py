@@ -142,7 +142,7 @@ def BosonBunching(n):
     Circuit_Rand = pcvl.Circuit.decomposition(Unitary, mzi,
                                                 phase_shifter_fn=pcvl.PS,
                                                 shape="triangle")
-    #pcvl.pdisplay(Circuit_Rand, recursive=True)
+    
 
     input_indisinguishable, input_partialydistinguishable, input_distinguishable = Create_inputs(n,w) #indistinguishable photons, partially distinguishable photons, fully distinguishable photons respectivley
 
@@ -159,8 +159,8 @@ def BosonBunching(n):
     print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"indisinguishable",Prob_indist*100))
     print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"parially disinguishable",Prob_partial*100))
 
-    PlotProb(i, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully)
-    PlotDist(i, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully)
+    PlotProb(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully)
+    PlotDist(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully)
     
     
 # for i in range(4,8):
