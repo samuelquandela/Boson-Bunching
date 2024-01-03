@@ -1,2 +1,2 @@
-perceval-quandela==0.9.1
+perceval-quandela==0.11.0
 jupyter
