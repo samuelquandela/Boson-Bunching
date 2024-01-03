@@ -6,7 +6,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-def CreateVectors(n,w):
+def create_vectors(n,w):
     #first two orthonormal vectors from which the Unitary matrix for the circuit is built
     v1 = np.zeros(n,dtype = 'complex_')
     v1[0] = 1
@@ -25,8 +25,8 @@ def CreateVectors(n,w):
 def normalize(vector):
     return vector / np.linalg.norm(vector)
 
-def MakeUnitary(n, w):
-    vector1, vector2 = CreateVectors(n,w)
+def make_unitary(n, w):
+    vector1, vector2 = create_vectors(n,w)
 
     orthonormal_basis = [normalize(vector1), normalize(vector2)]
     for _ in range(n-2):
@@ -40,22 +40,21 @@ def MakeUnitary(n, w):
     mat = []
     for i in range(n):
         mat.append(orthonormal_basis[i])
-    UnitaryMatrix = np.matrix(mat)
+    unitary_matrix = np.matrix(mat)
 
-    return UnitaryMatrix
+    return unitary_matrix
 
-def Create_inputs(n,w):
-    #make a list of fully distinguishable photons of the form |{a:i}> ## I would define what |{a:i}> means i.e. attribute a of the photon has value i
-    ##For a list of states, I'd rather choose another name than theta
-    States_dist = []
+def create_inputs(n,w):
+    #make a list of fully distinguishable photons of the form |{a:i}> that means we give the photon an attribute a with value i 
+    states_dist = []
     for i in range(1,n+1):
         x = "|{{a:{}}}>".format(i)
-        States_dist.append(pcvl.StateVector(x))
+        states_dist.append(pcvl.StateVector(x))
     #make a list of all input photons which are superpositions of |{a:1}> and |{a:2}>
-    States_par_dist = [States_dist[0], States_dist[1]] #start with the pure states |{a:1}> and |{a:2}>
+    states_par_dist = [states_dist[0], states_dist[1]] #start with the pure states |{a:1}> and |{a:2}>
     for i in range(2,n):
-        x = States_par_dist[0] + w**(i-2) * States_par_dist[1] #add the states |{a:1}> + w^(i-2)|{a:2}>
-        States_par_dist.append(x)
+        x = states_par_dist[0] +  states_par_dist[1] * w**(i-2) #add the states |{a:1}> + w^(i-2)|{a:2}>
+        states_par_dist.append(x)
     #Input states
     #initialise the variables
     indisting_photons = [] 
@@ -64,36 +63,36 @@ def Create_inputs(n,w):
     #fill the states
     for i in range(n):
         indisting_photons.append(1) # gives the state |1,1, ... , 1>
-        par_disting_photons = par_disting_photons * States_par_dist[i]
-        disting_photons = disting_photons * States_dist[i] # gives the state |{a:1},{a:2}, ... ,{a:n}> 
+        par_disting_photons = par_disting_photons * states_par_dist[i]
+        disting_photons = disting_photons * states_dist[i] # gives the state |{a:1},{a:2}, ... ,{a:n}> 
     return pcvl.BasicState(indisting_photons), par_disting_photons, disting_photons
 
-def CalcProb(disttype_input, n, Simulator):
-    def Reverse(lst):
+def calc_prob(disttype_input, n, simulator):
+    def reverse(lst):
         new_lst = lst[::-1]
         return new_lst
     #initialize the probabilities
-    Probability_photons = 0
-    Probability_distribution_photons = []
+    probability_photons = 0
+    probability_distribution_photons = []
     #summing over all cases where all photons end up in only two modes
-    for i in range(math.ceil((n+1)/2)):  
-        p = Simulator.probability(disttype_input, pcvl.BasicState([i,n-i]+[0]* (n-2)))
-        Probability_distribution_photons.append(p)
-        Probability_photons += p
+    for i in range(math.ceil((n+1)/2)): # range over half the distribution because of symmetry
+        p = simulator.probability(disttype_input, pcvl.BasicState([i,n-i]+[0]* (n-2)))
+        probability_distribution_photons.append(p)
+        probability_photons += p
     X = []
     for i in range(math.ceil((n+1)/2), n+1):
-        X.append(Probability_distribution_photons[i-math.ceil((n+1)/2)])
-        Probability_photons += Probability_distribution_photons[i-math.ceil((n+1)/2)]
-    Probability_distribution_photons = Probability_distribution_photons + Reverse(X)
+        X.append(probability_distribution_photons[i-math.ceil((n+1)/2)])
+        probability_photons += probability_distribution_photons[i-math.ceil((n+1)/2)]
+    probability_distribution_photons = probability_distribution_photons + reverse(X)
     for i in range(n+1):
-        if Probability_photons != 0:
-            Probability_distribution_photons[i] = Probability_distribution_photons[i]/Probability_photons
+        if probability_photons != 0:
+            probability_distribution_photons[i] = probability_distribution_photons[i]/probability_photons
     
-    return Probability_distribution_photons, Probability_photons
+    return probability_distribution_photons, probability_photons
 
 colours= ['#58c4e1','#946cba','#383e48'] # light blue, purple and gray
-def PlotProb(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully):
-    def addlabels(x,y):
+def plot_prob(n, probdist_partial , prob_partial, probdist_indist , prob_indist, probdist_fully , prob_fully):
+    def add_labels(x,y):
         for i in range(len(x)):
             if y[i]>0.0005:
                 plt.text(i,y[i]/2, round(y[i], 5), ha = 'center', color= 'white')
@@ -101,26 +100,26 @@ def PlotProb(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, 
                 plt.text(i,1.25*y[i], round(y[i], 5), ha = 'center')
     
     cases = ["indist", "partiallydist", "dist"]
-    propabilities = [Prob_indist, Prob_partial, Prob_fully]
+    propabilities = [prob_indist, prob_partial, prob_fully]
     plt.figure()
     plt.bar(cases, propabilities, color= colours)
     plt.ylabel('probability')
     plt.title("Comparing the total bunching probabilities for {} photons".format(n))
-    addlabels(cases, propabilities)
+    add_labels(cases, propabilities)
     save_results_to = '/Users/samuelhorsch/Code/Perceval_Sam/BosonBunching/Figures/'
     plt.savefig(save_results_to + 'BunchingProbabilities{}photons.png'.format(n))
     plt.close()
 
-def PlotDist(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully):
+def plot_dist(n, probdist_partial , prob_partial, probdist_indist , prob_indist, probdist_fully , prob_fully):
     X = []
     for i in range(n+1):
         X.append("({},{})".format(i,n-i)) #creates a list of all posible tuple such that a+b=n for tuple (a,b)
     outputmodes = X
 
     plt.figure()
-    plt.scatter(outputmodes,Probdist_indist, label = 'indistinguishable', color = colours[0])
-    plt.scatter(outputmodes,Probdist_partial, label = 'partially distinguishable', color= colours[1])
-    plt.scatter(outputmodes,Probdist_fully, label= 'distinguishable', color= colours[2])
+    plt.scatter(outputmodes,probdist_indist, label = 'indistinguishable', color = colours[0])
+    plt.scatter(outputmodes,probdist_partial, label = 'partially distinguishable', color= colours[1])
+    plt.scatter(outputmodes,probdist_fully, label= 'distinguishable', color= colours[2])
     plt.ylabel('probability')
     plt.xlabel('number of photons in first two modes')
     plt.title("Normalised bunching distributions")
@@ -129,41 +128,38 @@ def PlotDist(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, 
     plt.savefig(save_results_to + 'BunchingDistribution{}photons.png'.format(n))
     plt.close()
 
-def BosonBunching(n):
+def boson_bunching(n):
     #definition of w as the (n-2)th root of unity
     w = np.exp((2*math.pi*1j)/(n-2))
-    UnitaryMatrix = MakeUnitary(n, w)
+    unitary_matrix = make_unitary(n, w)
     # building Mach-Zender Interferometer block of the circuit
     mzi = (pcvl.BS() // (0, pcvl.PS(phi=pcvl.Parameter("φ_a")))
         // pcvl.BS() // (1, pcvl.PS(phi=pcvl.Parameter("φ_b"))))
-    # convert Unitary matrix into perceval languange
-    Unitary = pcvl.Matrix(UnitaryMatrix)
+    # convert Unitary matrix into perceval language
+    unitary = pcvl.Matrix(unitary_matrix)
     #create circuit
-    Circuit_Rand = pcvl.Circuit.decomposition(Unitary, mzi,
+    circuit_rand = pcvl.Circuit.decomposition(unitary, mzi,
                                                 phase_shifter_fn=pcvl.PS,
                                                 shape="triangle")
     
 
-    input_indisinguishable, input_partialydistinguishable, input_distinguishable = Create_inputs(n,w) #indistinguishable photons, partially distinguishable photons, fully distinguishable photons respectivley
+    input_indistinguishable, input_partially_distinguishable, input_distinguishable = create_inputs(n,w) #indistinguishable photons, partially distinguishable photons, fully distinguishable photons respectivley
 
     #simulating boson sampling
     p = pcvl.Processor("SLOS")
-    p.set_circuit(Circuit_Rand)
+    p.set_circuit(circuit_rand)
     s = pcvl.SimulatorFactory().build(p)
 
-    Probdist_partial , Prob_partial = CalcProb(input_partialydistinguishable, n, s) # high runtime
-    Probdist_indist , Prob_indist = CalcProb(input_indisinguishable, n, s)
-    Probdist_fully , Prob_fully = CalcProb(input_distinguishable, n, s) # high runtime
+    probdist_partial , prob_partial = calc_prob(input_partially_distinguishable, n, s) # high runtime
+    probdist_indist , prob_indist = calc_prob(input_indistinguishable, n, s)
+    probdist_fully , prob_fully = calc_prob(input_distinguishable, n, s) # high runtime
 
-    print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"disinguishable",Prob_fully*100))
-    print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"indisinguishable",Prob_indist*100))
-    print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"parially disinguishable",Prob_partial*100))
+    print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"distinguishable",prob_fully*100))
+    print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"indistinguishable",prob_indist*100))
+    print("The probability for all {} {} photon ending up in the first two modes is: {:0.3f} %".format(n,"partially distinguishable",prob_partial*100))
 
-    PlotProb(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully)
-    PlotDist(n, Probdist_partial , Prob_partial, Probdist_indist , Prob_indist, Probdist_fully , Prob_fully)
+    plot_prob(n, probdist_partial , prob_partial, probdist_indist , prob_indist, probdist_fully , prob_fully)
+    plot_dist(n, probdist_partial , prob_partial, probdist_indist , prob_indist, probdist_fully , prob_fully)
     
-    
-# for i in range(4,8):
-#     BosonBunching(i)
-    
-BosonBunching(8)
+       
+boson_bunching(5)
