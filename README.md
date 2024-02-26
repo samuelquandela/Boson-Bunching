@@ -6,8 +6,8 @@ reference: arXiv:2203.01306
 
 Installation:
 
-# clone the repository
+### clone the repository
 git clone git@github.com:samuelquandela/Boson-Bunching.git
 
-# install the requirements
+### install the requirements
 pip install -r requirements.txt
